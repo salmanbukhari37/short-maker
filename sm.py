@@ -53,10 +53,13 @@ def cmd_scan(a):
     for v in found["videos"]:
         info = probe(v["path"])
         fps = min(60, round(info["fps"]) or 30)
-        clips.append({"key": v["key"], "path": v["path"], "info": info, "fit": "crop", "cx": 0.5,
+        box = None if (a.only and a.only.lower() not in v["path"].name.lower()) else video.detect_bars(v["path"], info, work)
+        clips.append({"key": v["key"], "path": v["path"], "info": info, "fit": "crop", "cx": 0.5, "box": box,
                       "pfps": fps // 2 if fps >= 48 and fps % 2 == 0 else fps})
         say(f"  {v['key']}  {v['path'].name}  {info['width']}x{info['height']} {info['fps']:.0f}fps "
-            f"{info['duration']:.2f}s audio:{'yes' if info['has_audio'] else 'no'}")
+            f"{info['duration']:.2f}s audio:{'yes' if info['has_audio'] else 'no'}"
+            + (f"  black bars found: picture is {box[0]}x{box[1]}, zoomed to fill (clip option \"fit\": \"blur\" "
+               f"keeps it whole, \"bars\": \"keep\" leaves the bars)" if box else ""))
     if not clips:
         say("  (no video files found in this folder)")
     say("VOICE  (#  who  seconds  [tags]  text-from-filename)")
@@ -126,7 +129,8 @@ def cmd_frames(a):
             raise SMError(f"unknown clip '{a.clip}'")
         info = probe(v["path"])
         fps = min(60, round(info["fps"]) or 30)
-        clip = {"path": v["path"], "info": info, "fit": "crop", "cx": 0.5}
+        clip = {"path": v["path"], "info": info, "fit": "crop", "cx": 0.5,
+                "box": video.detect_bars(v["path"], info, folder / "_sm")}
         pfps = fps // 2 if fps >= 48 and fps % 2 == 0 else fps
     else:
         clip = plan_clips[a.clip]

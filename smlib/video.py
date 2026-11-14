@@ -4,6 +4,7 @@ The renderer works on fixed time windows ("chunks") of the final timeline. Each
 chunk is one ffmpeg run that reads only the source ranges it needs, so a render
 can stop and resume (needed where one command may only run ~3 minutes) and an
 edit to one caption only re-renders the chunk it sits in."""
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -12,7 +13,8 @@ from PIL import Image, ImageDraw
 
 from . import captions
 from .style import RES
-from .util import (die, elapsed, ffmpeg, file_sig, probe, ram_gb, run, say, sha, tool, ts)
+from .util import (die, elapsed, ffmpeg, file_sig, load_json, probe, ram_gb, run, run_err, save_json, say, sha,
+                   tool, ts)
 
 PW, PH = RES["preview"]
 LOOKS = {
@@ -39,25 +41,66 @@ def _read(path):
 
 # ------------------------------------------------------------------- fitting
 
+def detect_bars(path, info, work):
+    """Find black letterbox/pillarbox bars baked into a clip.
+    -> (w, h, x, y) of the real picture in source pixels, or None. Cached in _sm/bars.json."""
+    work = Path(work)
+    work.mkdir(exist_ok=True)
+    cache_p = work / "bars.json"
+    cache = load_json(cache_p) if cache_p.exists() else {}
+    key = sha(file_sig(path))
+    if key in cache:
+        return tuple(cache[key]) if cache[key] else None
+    W, H = info["width"], info["height"]
+    sw = 540
+    sh = round(H * sw / W / 2) * 2
+    x0, y0, x1, y1 = sw, sh, 0, 0
+    for frac in (0.15, 0.5, 0.85):
+        err = run_err([tool("ffmpeg"), "-hide_banner", "-nostdin", "-ss", _f(info["duration"] * frac), "-i", path,
+                       "-frames:v", "10", "-an", "-vf", f"scale={sw}:{sh},cropdetect=limit=24:round=2:reset=0",
+                       "-f", "null", "-"])
+        m = re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", err)
+        if m:
+            w, h, x, y = map(int, m[-1])
+            x0, y0, x1, y1 = min(x0, x), min(y0, y), max(x1, x + w), max(y1, y + h)
+    box = None
+    if x1 > x0 and y1 > y0:
+        fw, fh = (x1 - x0) / sw, (y1 - y0) / sh
+        if (fw < 0.97 or fh < 0.97) and fw * fh > 0.45:        # real bars, not just a dark scene
+            bx, by = round(x0 / sw * W / 2) * 2, round(y0 / sh * H / 2) * 2
+            bw, bh = round(fw * W / 2) * 2, round(fh * H / 2) * 2
+            trim = 4                                            # shave the soft edge of the bars
+            box = (bw - 2 * trim if fw < 0.97 else W, bh - 2 * trim if fh < 0.97 else H,
+                   bx + trim if fw < 0.97 else 0, by + trim if fh < 0.97 else 0)
+    cache[key] = list(box) if box else None
+    save_json(cache_p, cache)
+    return box
+
+
 def fit_chain(clip, W, H, uid="0"):
     """Filters that turn any source frame into a WxH 9:16 frame. -> (chain, complex?)"""
     w, h = clip["info"]["width"], clip["info"]["height"]
+    pre = []
+    box = clip.get("box")
+    if box:                                                     # cut away baked-in black bars first
+        w, h = box[0], box[1]
+        pre = [f"crop={box[0]}:{box[1]}:{box[2]}:{box[3]}"]
     if (w, h) == (W, H):
-        return []
-    if clip["fit"] == "blur" and w * H > h * W * 1.02:      # source wider than 9:16
+        return pre
+    if clip["fit"] == "blur" and w * H > h * W * 1.02:      # picture wider than 9:16
         u = uid
-        return [f"split[fa{u}][fb{u}];[fa{u}]scale={W // 8}:{H // 8}:force_original_aspect_ratio=increase,"
-                f"crop={W // 8}:{H // 8},boxblur=6:2,scale={W}:{H}:flags=bilinear,eq=brightness=-0.12[fbg{u}];"
-                f"[fb{u}]scale={W}:{H}:force_original_aspect_ratio=decrease:flags=bicubic[ffg{u}];"
-                f"[fbg{u}][ffg{u}]overlay=(W-w)/2:(H-h)/2"]
-    return [f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=bicubic",
-            f"crop={W}:{H}:(iw-{W})*{_f(clip['cx'])}:(ih-{H})/2"]
+        return pre + [f"split[fa{u}][fb{u}];[fa{u}]scale={W // 8}:{H // 8}:force_original_aspect_ratio=increase,"
+                      f"crop={W // 8}:{H // 8},boxblur=6:2,scale={W}:{H}:flags=bilinear,eq=brightness=-0.12[fbg{u}];"
+                      f"[fb{u}]scale={W}:{H}:force_original_aspect_ratio=decrease:flags=bicubic[ffg{u}];"
+                      f"[fbg{u}][ffg{u}]overlay=(W-w)/2:(H-h)/2"]
+    return pre + [f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=bicubic",
+                  f"crop={W}:{H}:(iw-{W})*{_f(clip['cx'])}:(ih-{H})/2"]
 
 
 # ------------------------------------------------------------------- proxies
 
 def proxy_path(work, clip, pfps):
-    return Path(work) / f"proxy_{sha(file_sig(clip['path']), clip['fit'], clip['cx'], PW, PH, pfps)}.mp4"
+    return Path(work) / f"proxy_{sha(file_sig(clip['path']), clip['fit'], clip['cx'], clip.get('box'), PW, PH, pfps)}.mp4"
 
 
 def ensure_proxy(work, clip, pfps, budget):
@@ -225,7 +268,7 @@ def build_chunk(plan, c0, c1, W, H, fps, final, caps_png, lowmem=False):
         read = (max(1.0 / fps, min(b, s["content"]) - a_c) + 2.0 / fps) * s["speed"]
         src = clip["path"] if final else proxy_path(plan["work"], clip, plan["pfps"])
         inputs += (["-threads", "1"] if lowmem else []) + ["-ss", _f(ss), "-t", _f(read), "-i", str(src)]
-        keyp.append((file_sig(clip["path"]), _f(ss), _f(read)))
+        keyp.append((file_sig(clip["path"]), _f(ss), _f(read), clip["fit"], clip["cx"], clip.get("box")))
         ch = (fit_chain(clip, W, H, str(ni)) if final else [])
         ch += [f"setpts=(PTS-STARTPTS)/{_f(s['speed'])}", f"fps={fps}", "format=yuv420p",
                f"tpad=stop_mode=clone:stop_duration={_f(b - a + 1)}", f"trim=end_frame={n}", "setpts=PTS-STARTPTS"]

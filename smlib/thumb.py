@@ -109,6 +109,10 @@ def make_thumbnail(plan, out):
         die(f"thumbnail.clip '{key}' unknown")
     clip = plan["clips"][key]
     im = grab_frame(clip, spec.get("t", clip["info"]["duration"] / 2))
+    if clip.get("box"):                                 # same black-bar removal as the video
+        k = im.width / clip["info"]["width"]
+        bw, bh, bx, by = clip["box"]
+        im = im.crop((round(bx * k), round(by * k), round((bx + bw) * k), round((by + bh) * k)))
     im = crop_to(im, W, H, spec.get("zoom", 1.0), spec.get("focus", [0.5, 0.5]), clip["cx"])
     if spec.get("flip"):
         im = im.transpose(Image.FLIP_LEFT_RIGHT)

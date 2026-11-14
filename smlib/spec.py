@@ -2,7 +2,7 @@
 import re
 from pathlib import Path
 
-from . import audio, captions
+from . import audio, captions, video
 from .style import asset, load_style
 from .util import AUDIO_EXT, VIDEO_EXT, SMError, die, load_json, probe, ts
 
@@ -139,7 +139,7 @@ def resolve(folder):
         die("no video file in the folder and no \"clips\" in short.json")
     for key, val in raw_clips.items():
         c = {"file": val} if isinstance(val, str) else dict(val)
-        _keys(c, {"file", "fit", "cx"}, f"clips.{key}")
+        _keys(c, {"file", "fit", "cx", "bars"}, f"clips.{key}")
         path = (folder / c["file"]).resolve()
         if not path.is_file():
             die(f"clips.{key}: file not found: {c['file']}")
@@ -149,7 +149,10 @@ def resolve(folder):
         fit = c.get("fit", "crop")
         if fit not in ("crop", "blur"):
             die(f"clips.{key}.fit must be 'crop' or 'blur'")
-        clips[key] = {"key": key, "path": path, "info": info, "fit": fit,
+        if c.get("bars", "auto") not in ("auto", "keep"):
+            die(f"clips.{key}.bars must be 'auto' (cut black bars away) or 'keep'")
+        box = video.detect_bars(path, info, folder / "_sm") if c.get("bars", "auto") == "auto" else None
+        clips[key] = {"key": key, "path": path, "info": info, "fit": fit, "box": box,
                       "cx": _num(c.get("cx", 0.5), f"clips.{key}.cx", 0, 1)}
     first = next(iter(clips))
 
