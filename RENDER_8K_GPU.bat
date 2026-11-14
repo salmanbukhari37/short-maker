@@ -7,7 +7,7 @@ cd /d "%~dp0"
 set "PY=python"
 where python >nul 2>nul || set "PY=py -3"
 set "TARGET=%~1"
-if "%TARGET%"=="" set /p "TARGET=Short ka folder yahan drag karke Enter dabayen: "
+if "%TARGET%"=="" set /p "TARGET=Drag the Short's folder here and press Enter: "
 set "TARGET=%TARGET:"=%"
 %PY% sm.py render "%TARGET%" --res 8k
 if errorlevel 1 goto end
