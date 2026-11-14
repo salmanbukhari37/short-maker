@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+_sm/
+*.mp4
+*.mov
+*.mp3
+*.wav
+bin/

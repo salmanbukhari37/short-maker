@@ -1,0 +1,164 @@
+{
+  "brand": "FROVIXA",
+  "fonts": {
+    "caption": "fonts/Montserrat-Bold.ttf",
+    "title": "fonts/Montserrat-ExtraBoldItalic.ttf",
+    "sticker": "fonts/Montserrat-BlackItalic.ttf",
+    "emoji": "fonts/NotoColorEmoji.ttf"
+  },
+  "caption": {
+    "size": 0.055,
+    "y": 0.195,
+    "max_w": 0.76,
+    "pad_x": 0.55,
+    "pad_y": 0.32,
+    "radius": 0.36,
+    "line_height": 1.16,
+    "stroke": 0.045,
+    "shadow": 0.5,
+    "pop": true,
+    "lead": 0.04,
+    "hold": 0.35,
+    "max_words": 6,
+    "positions": {
+      "top": 0.195,
+      "mid": 0.5,
+      "low": 0.7
+    }
+  },
+  "speakers": {
+    "trevor": {
+      "pill": [
+        233,
+        190,
+        22,
+        205
+      ]
+    },
+    "michael": {
+      "pill": [
+        58,
+        58,
+        58,
+        170
+      ]
+    },
+    "franklin": {
+      "pill": [
+        34,
+        139,
+        84,
+        205
+      ]
+    },
+    "npc": {
+      "pill": [
+        37,
+        99,
+        176,
+        200
+      ]
+    },
+    "cop": {
+      "pill": [
+        29,
+        78,
+        216,
+        205
+      ]
+    },
+    "hook": {
+      "pill": [
+        233,
+        190,
+        22,
+        205
+      ]
+    },
+    "default": {
+      "pill": [
+        58,
+        58,
+        58,
+        170
+      ]
+    }
+  },
+  "text_color": [
+    255,
+    255,
+    255
+  ],
+  "stroke_color": [
+    28,
+    28,
+    28
+  ],
+  "aliases": {
+    "black-american-npc": "npc",
+    "mind-cop": "cop",
+    "carl-the-npc": "carl"
+  },
+  "audio": {
+    "voice_db": -19.0,
+    "bed_db": 0.0,
+    "duck_db": -10.0,
+    "line_gap": 0.3,
+    "music_db": -20.0,
+    "sfx_db": -6.0,
+    "master_lufs": -14.0
+  },
+  "video": {
+    "res": "8k",
+    "fps": "source",
+    "codec": "auto",
+    "crf": {
+      "1080": 16,
+      "1440": 16,
+      "4k": 15,
+      "8k": 19
+    },
+    "x264_preset": "veryfast",
+    "nvenc_cq": 18,
+    "grade": null,
+    "chunk_s": {
+      "1080": 20,
+      "1440": 10,
+      "4k": 5,
+      "8k": 2
+    }
+  },
+  "cta": {
+    "file": "../files/Frovixa_LikeSubscribe_TRANSPARENT.mov",
+    "audio_db": -10.0
+  },
+  "thumbnail": {
+    "size": [
+      1080,
+      1920
+    ],
+    "title_colors": [
+      [
+        255,
+        255,
+        255
+      ],
+      [
+        255,
+        208,
+        0
+      ]
+    ],
+    "title_y": 0.085,
+    "title_max_w": 0.92,
+    "title_size": 0.125,
+    "grade": {
+      "contrast": 1.12,
+      "saturation": 1.22,
+      "brightness": 1.0,
+      "vignette": 0.42,
+      "top_shade": 0.4
+    },
+    "brand_y": 0.955
+  }
+}
