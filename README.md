@@ -6,14 +6,14 @@ export) ab ek chhoti si `short.json` file se hota hai.
 
 **Yeh program yahan rehta hai:** `E:\Game Recordings\shorts\shorts-maker\`
 
-| File | Kaam |
-|---|---|
-| `sm.py` | Program ka darwaza (saari commands) |
-| `smlib/` | Asal code: `spec.py` (short.json samajhna), `captions.py` (caption pills), `audio.py` (voice + mix), `video.py` (render), `thumb.py` (thumbnail) |
-| `style.json` | **House style**: font, caption size/jagah, har character ka rang, audio levels, quality. Yahan badlo to har naye Short par lagu hoga |
-| `fonts/` | Montserrat + colour emoji font (dono free/OFL) |
-| `RENDER_8K_GPU.bat` | Short ka folder is par drag karo: aapke PC ke GPU se 8K final + thumbnail |
-| `SETUP_CHECK.bat` | Ek dafa chalao: Python packages, ffmpeg aur GPU check |
+| File                | Kaam                                                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `sm.py`             | Program ka darwaza (saari commands)                                                                                                              |
+| `smlib/`            | Asal code: `spec.py` (short.json samajhna), `captions.py` (caption pills), `audio.py` (voice + mix), `video.py` (render), `thumb.py` (thumbnail) |
+| `style.json`        | **House style**: font, caption size/jagah, har character ka rang, audio levels, quality. Yahan badlo to har naye Short par lagu hoga             |
+| `fonts/`            | Montserrat + colour emoji font (dono free/OFL)                                                                                                   |
+| `RENDER_8K_GPU.bat` | Short ka folder is par drag karo: aapke PC ke GPU se 8K final + thumbnail                                                                        |
+| `SETUP_CHECK.bat`   | Ek dafa chalao: Python packages, ffmpeg aur GPU check                                                                                            |
 
 ## Har Short ka folder
 
@@ -49,22 +49,39 @@ Claude yeh 5 steps chalata hai (har step ek command):
 ```json
 {
   "name": "Trevor_Proposal",
-  "clips": {"a": "raw.mp4"},
+  "clips": { "a": "raw.mp4" },
   "timeline": [
     ["a", 0, 12.4],
-    ["a", 12.4, 14.0, {"speed": 0.5, "look": "drama"}],
-    ["a", 14.0, 17.0, {"zoom": [1.0, 1.08], "hold": 0.5}]
+    ["a", 12.4, 14.0, { "speed": 0.5, "look": "drama" }],
+    ["a", 14.0, 17.0, { "zoom": [1.0, 1.08], "hold": 0.5 }]
   ],
   "lines": [
-    {"who": "trevor",  "audio": 8, "at": 0.2, "text": "Trevor wants to marry your daughter 💀"},
-    {"who": "michael", "audio": 2, "at": 3.0, "text": "So… | what do you do / for a living?"},
-    {"who": "trevor",  "audio": 3, "text": "I run my own business, / sir.💀"},
-    {"who": "michael", "audio": "Rejected", "text": "REJECTED ❌"}
+    {
+      "who": "trevor",
+      "audio": 8,
+      "at": 0.2,
+      "text": "Trevor wants to marry your daughter 💀"
+    },
+    {
+      "who": "michael",
+      "audio": 2,
+      "at": 3.0,
+      "text": "So… | what do you do / for a living?"
+    },
+    { "who": "trevor", "audio": 3, "text": "I run my own business, / sir.💀" },
+    { "who": "michael", "audio": "Rejected", "text": "REJECTED ❌" }
   ],
-  "sfx": [{"at": 12.4, "name": "boom"}],
-  "fx":  [{"at": 12.4, "type": "flash"}, {"at": 12.4, "type": "shake", "dur": 0.6}],
-  "thumbnail": {"clip": "a", "t": 12.9, "title": ["MARRY MY", "DAUGHTER?"],
-                "sticker": {"text": "REJECTED!", "at": [0.7, 0.56]}}
+  "sfx": [{ "at": 12.4, "name": "boom" }],
+  "fx": [
+    { "at": 12.4, "type": "flash" },
+    { "at": 12.4, "type": "shake", "dur": 0.6 }
+  ],
+  "thumbnail": {
+    "clip": "a",
+    "t": 12.9,
+    "title": ["MARRY MY", "DAUGHTER?"],
+    "sticker": { "text": "REJECTED!", "at": [0.7, 0.56] }
+  }
 }
 ```
 
